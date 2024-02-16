@@ -153,6 +153,8 @@ if __name__ == "__main__":
         shuffle=True,
         drop_last=True,
         num_workers=args.workers,
+        pin_memory=True,
+        persistent_workers=True
     )
 
     test_loader = torch.utils.data.DataLoader(
@@ -161,6 +163,8 @@ if __name__ == "__main__":
         shuffle=False,
         drop_last=True,
         num_workers=args.workers,
+        pin_memory=True,
+        persistent_workers=True
     )
 
     encoder = get_resnet(args.resnet, pretrained=False)

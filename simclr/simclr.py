@@ -10,7 +10,7 @@ class SimCLR(nn.Module):
     We opt for simplicity and adopt the commonly used ResNet (He et al., 2016) to obtain hi = f(x ̃i) = ResNet(x ̃i) where hi ∈ Rd is the output after the average pooling layer.
     """
 
-    def __init__(self, encoder, projection_dim, n_features):
+    def __init__(self, encoder, projection_dim, n_features, static=False):
         super(SimCLR, self).__init__()
 
         self.encoder = encoder
@@ -25,6 +25,14 @@ class SimCLR(nn.Module):
             nn.ReLU(),
             nn.Linear(self.n_features, projection_dim, bias=False),
         )
+        
+        if static == True:
+            print("#"*10, "This is static mode", "#"*10)
+            for param in self.projector.parameters():
+                param.requires_grad = False
+        else:
+            print("#"*10, "This is original mode", "#"*10)
+        
 
     def forward(self, x_i, x_j):
         h_i = self.encoder(x_i)

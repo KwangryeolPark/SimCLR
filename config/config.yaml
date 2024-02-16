@@ -1,4 +1,6 @@
 # distributed training
+static: False
+
 nodes: 1
 gpus: 1 # I recommend always assigning 1 GPU to 1 node
 nr: 0 # machine nr. in node (0 -- nodes - 1)

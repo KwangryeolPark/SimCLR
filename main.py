@@ -93,6 +93,8 @@ def main(gpu, args):
         drop_last=True,
         num_workers=args.workers,
         sampler=train_sampler,
+        pin_memory=True,
+        persistent_workers=True
     )
 
     # initialize ResNet
@@ -100,7 +102,7 @@ def main(gpu, args):
     n_features = encoder.fc.in_features  # get dimensions of fc layer
 
     # initialize model
-    model = SimCLR(encoder, args.projection_dim, n_features)
+    model = SimCLR(encoder, args.projection_dim, n_features, static=args.static)
     if args.reload:
         model_fp = os.path.join(
             args.model_path, "checkpoint_{}.tar".format(args.epoch_num)

@@ -19,12 +19,12 @@ class ContrastiveLearning(LightningModule):
     def __init__(self, args):
         super().__init__()
 
-        self.hparams = args
+        self.save_hyperparameters(args)
 
         # initialize ResNet
         self.encoder = get_resnet(self.hparams.resnet, pretrained=False)
         self.n_features = self.encoder.fc.in_features  # get dimensions of fc layer
-        self.model = SimCLR(self.encoder, self.hparams.projection_dim, self.n_features)
+        self.model = SimCLR(self.encoder, self.hparams.projection_dim, self.n_features, static=args.static)
         self.criterion = NT_Xent(
             self.hparams.batch_size, self.hparams.temperature, world_size=1
         )

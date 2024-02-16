@@ -10,7 +10,7 @@ from simclr.modules import LogisticRegression, get_resnet
 from simclr.modules.transformations import TransformsSimCLR
 
 from utils import yaml_config_hook
-
+import wandb
 
 def inference(loader, simclr_model, device):
     feature_vector = []
@@ -111,13 +111,18 @@ def test(args, loader, simclr_model, model, criterion, optimizer):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="SimCLR")
-    config = yaml_config_hook("./config/config.yaml")
+    config = yaml_config_hook("./config/config_none_static.yaml")
     for k, v in config.items():
         parser.add_argument(f"--{k}", default=v, type=type(v))
 
     args = parser.parse_args()
+    wandb.init(
+        project='SCL',
+        tags=['original_code'],
+        name="static" if args.save_static else "none_static",
+        config=args
+    )
     args.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
     if args.dataset == "STL10":
         train_dataset = torchvision.datasets.STL10(
             args.dataset_dir,
@@ -172,7 +177,7 @@ if __name__ == "__main__":
 
     # load pre-trained model from checkpoint
     simclr_model = SimCLR(encoder, args.projection_dim, n_features)
-    model_fp = os.path.join(args.model_path, "checkpoint_{}.tar".format(args.epoch_num))
+    model_fp = os.path.join(args.model_path,  "checkpoint_{}_{}.tar".format("static" if args.save_static else "none_static", args.epoch_num))
     simclr_model.load_state_dict(torch.load(model_fp, map_location=args.device.type))
     simclr_model = simclr_model.to(args.device)
     simclr_model.eval()
@@ -201,6 +206,10 @@ if __name__ == "__main__":
         print(
             f"Epoch [{epoch}/{args.logistic_epochs}]\t Loss: {loss_epoch / len(arr_train_loader)}\t Accuracy: {accuracy_epoch / len(arr_train_loader)}"
         )
+        wandb.log({
+            "train acc": accuracy_epoch / len(arr_train_loader),
+            "train loss": loss_epoch / len(arr_train_loader)
+        })
 
     # final testing
     loss_epoch, accuracy_epoch = test(
@@ -209,3 +218,7 @@ if __name__ == "__main__":
     print(
         f"[FINAL]\t Loss: {loss_epoch / len(arr_test_loader)}\t Accuracy: {accuracy_epoch / len(arr_test_loader)}"
     )
+    wandb.log({
+        'test acc': accuracy_epoch / len(arr_test_loader),
+        'test loss': loss_epoch / len(arr_test_loader)
+    })

@@ -105,7 +105,7 @@ def main(gpu, args):
     model = SimCLR(encoder, args.projection_dim, n_features, static=args.static)
     if args.reload:
         model_fp = os.path.join(
-            args.model_path, "checkpoint_{}.tar".format(args.epoch_num)
+            args.model_path, "checkpoint_{}_{}.tar".format("static" if args.save_static else "none_static", args.epoch_num)
         )
         model.load_state_dict(torch.load(model_fp, map_location=args.device.type))
     model = model.to(args.device)
@@ -159,12 +159,13 @@ def main(gpu, args):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="SimCLR")
-    config = yaml_config_hook("./config/config.yaml")
+    config = yaml_config_hook("./config/config_static.yaml")
     for k, v in config.items():
         parser.add_argument(f"--{k}", default=v, type=type(v))
+        print("{}|{}".format(k, v))
 
     args = parser.parse_args()
-
+    
     # Master address for distributed data parallel
     os.environ["MASTER_ADDR"] = "127.0.0.1"
     os.environ["MASTER_PORT"] = "8000"

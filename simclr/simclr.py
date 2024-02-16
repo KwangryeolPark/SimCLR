@@ -34,10 +34,17 @@ class SimCLR(nn.Module):
             print("#"*10, "This is original mode", "#"*10)
         
 
-    def forward(self, x_i, x_j):
-        h_i = self.encoder(x_i)
-        h_j = self.encoder(x_j)
+    def forward(self, x_i, x_j=None):
+        if x_j != None:
+            h_i = self.encoder(x_i)
+            h_j = self.encoder(x_j)
 
-        z_i = self.projector(h_i)
-        z_j = self.projector(h_j)
-        return h_i, h_j, z_i, z_j
+            z_i = self.projector(h_i)
+            z_j = self.projector(h_j)
+            return h_i, h_j, z_i, z_j
+        else:
+            h_i = self.encoder(x_i)
+
+            z_i = self.projector(h_i)
+            return z_i
+            

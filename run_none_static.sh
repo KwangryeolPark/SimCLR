@@ -1,11 +1,8 @@
 # activate pip / conda environment first
 
 # Train SimCLR model
-python main.py --static=False --model=resnet18
+python main_none_static.py
 
 # Train linear model and run test
-python -m testing.logistic_regression \
-    with \
-    model_path=./logs/0 \
-    static=False \
-    model=resnet18
+python finetune_none_static.py --dataset=CIFAR10 --model_path=save --epoch_num=100
+python finetune_none_static.py --dataset=STL10 --model_path=save --epoch_num=100

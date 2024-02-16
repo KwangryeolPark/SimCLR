@@ -1,6 +1,7 @@
-torch
+torch==1.13.1
 torchvision
 PyYAML
 tensorboard
 tqdm
 lightning
+wandb

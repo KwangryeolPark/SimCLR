@@ -32,7 +32,7 @@ def load_optimizer(args, model):
 
 
 def save_model(args, model, optimizer):
-    out = os.path.join(args.model_path,  "checkpoint_{}_{}.tar".format("static" if args.save_static else "none_static", args.epoch_num))
+    out = os.path.join(args.model_path, "checkpoint_{}_{}_{}.tar".format(args.pretrained_dataset, "static" if args.save_static else "none_static", args.epoch_num))
 
     # To save a DataParallel model generically, save the model.module.state_dict().
     # This way, you have the flexibility to load the model any way you want to any device you want.

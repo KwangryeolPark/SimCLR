@@ -138,6 +138,7 @@ if __name__ == "__main__":
             download=True,
             transform=TransformsSimCLR(size=args.image_size).test_transform,
         )
+        num_classes = 10
     elif args.dataset == "CIFAR10":
         train_dataset = torchvision.datasets.CIFAR10(
             args.dataset_dir,
@@ -151,6 +152,21 @@ if __name__ == "__main__":
             download=True,
             transform=TransformsSimCLR(size=args.image_size).test_transform,
         )
+        num_classes = 10
+    elif args.dataset == "CIFAR100":
+        train_dataset = torchvision.datasets.CIFAR100(
+            args.dataset_dir,
+            train=True,
+            download=True,
+            transform=TransformsSimCLR(size=args.image_size).test_transform,
+        )
+        test_dataset = torchvision.datasets.CIFAR100(
+            args.dataset_dir,
+            train=False,
+            download=True,
+            transform=TransformsSimCLR(size=args.image_size).test_transform,
+        )
+        num_classes = 100
     else:
         raise NotImplementedError
 
@@ -179,9 +195,9 @@ if __name__ == "__main__":
 
     # load pre-trained model from checkpoint
     simclr_model = SimCLR(encoder, args.projection_dim, n_features)
-    model_fp = os.path.join(args.model_path,  "checkpoint_{}_{}.tar".format("static" if args.save_static else "none_static", args.epoch_num))
+    model_fp = os.path.join(args.model_path, "checkpoint_{}_{}_{}.tar".format(args.pretrained_dataset, "static" if args.save_static else "none_static", args.epoch_num))
     simclr_model.load_state_dict(torch.load(model_fp, map_location=args.device.type))
-    simclr_model.projector = torch.nn.Linear(simclr_model.n_features, 10)
+    simclr_model.projector = torch.nn.Linear(simclr_model.n_features, num_classes)
     simclr_model = simclr_model.to(args.device)
 
     ## Logistic Regression

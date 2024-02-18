@@ -21,6 +21,7 @@ from simclr.modules.sync_batchnorm import convert_model
 
 from model import load_optimizer, save_model
 from utils import yaml_config_hook
+import wandb
 
 
 def train(args, train_loader, model, criterion, optimizer, writer):
@@ -37,6 +38,10 @@ def train(args, train_loader, model, criterion, optimizer, writer):
         loss.backward()
 
         optimizer.step()
+        
+        wandb.log({
+            "pretrain loss": loss.item()
+        })
 
         if dist.is_available() and dist.is_initialized():
             loss = loss.data.clone()
@@ -63,15 +68,21 @@ def main(gpu, args):
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
 
-    if args.dataset == "STL10":
+    if args.pretrained_dataset == "STL10":
         train_dataset = torchvision.datasets.STL10(
             args.dataset_dir,
             split="unlabeled",
             download=True,
             transform=TransformsSimCLR(size=args.image_size),
         )
-    elif args.dataset == "CIFAR10":
+    elif args.pretrained_dataset == "CIFAR10":
         train_dataset = torchvision.datasets.CIFAR10(
+            args.dataset_dir,
+            download=True,
+            transform=TransformsSimCLR(size=args.image_size),
+        )
+    elif args.pretrained_dataset == "CIFAR100":
+        train_dataset = torchvision.datasets.CIFAR100(
             args.dataset_dir,
             download=True,
             transform=TransformsSimCLR(size=args.image_size),
@@ -105,7 +116,7 @@ def main(gpu, args):
     model = SimCLR(encoder, args.projection_dim, n_features, static=args.static)
     if args.reload:
         model_fp = os.path.join(
-            args.model_path, "checkpoint_{}_{}.tar".format("static" if args.save_static else "none_static", args.epoch_num)
+            args.model_path, "checkpoint_{}_{}_{}.tar".format(args.dataset, "static" if args.save_static else "none_static", args.epoch_num)
         )
         model.load_state_dict(torch.load(model_fp, map_location=args.device.type))
     model = model.to(args.device)
@@ -165,6 +176,12 @@ if __name__ == "__main__":
         print("{}|{}".format(k, v))
 
     args = parser.parse_args()
+    wandb.init(
+        project='SCL',
+        tags=['original_code', 'pretrain', 'static'],
+        name=str("static" if args.save_static else "none_static") + " pretrain",
+        config=args
+    )
     
     # Master address for distributed data parallel
     os.environ["MASTER_ADDR"] = "127.0.0.1"
